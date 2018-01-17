@@ -1,0 +1,77 @@
+/*
+*        //-- Touch Program --\\ Eyüp AKAY
+*	This program used for chaning the file's dates if the file exists
+*	if not file creation is performed
+*	The user is able to give date to the program as parameters 
+*/
+#include <windows.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <strsafe.h>
+
+/*
+*	This function is used to perform to chande the file date
+*/
+BOOL UpdateFileTime(HANDLE hFile, TCHAR *argv[], int arr);
+
+void __cdecl _tmain(int argc, TCHAR *argv[])
+{
+	HANDLE hFile;
+	
+		hFile = CreateFile(argv[1],               // file to open
+		FILE_WRITE_ATTRIBUTES,          // open for reading
+		FILE_SHARE_READ,       // share for reading
+		NULL,                  // default security
+		OPEN_EXISTING,         // existing file only
+		FILE_ATTRIBUTE_NORMAL, // normal file
+		NULL);
+
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		hFile = CreateFile(argv[1],                // name of the write
+			GENERIC_WRITE,          // open for writing
+			0,                      // do not share
+			NULL,                   // default security
+			CREATE_NEW,             // create new file only
+			FILE_ATTRIBUTE_NORMAL,  // normal file
+			NULL);                  // no attr. template
+
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			_tprintf(TEXT("Terminal failure: Unable to open file \"%s\" for write.\n"), argv[1]);
+			return;
+		}
+		CloseHandle(hFile);
+	}
+	else
+	{
+		switch (argc)
+		{
+			case 2: UpdateFileTime(hFile, argv, 0); break;  // if no date was given as parameter.
+			default:  UpdateFileTime(hFile, argv, argc); break; // if a date was given
+		}
+		CloseHandle(hFile);
+	}
+}
+
+
+
+BOOL UpdateFileTime(HANDLE hFile, TCHAR *argv[], int arr)
+{
+	FILETIME ft;
+	SYSTEMTIME st;
+
+	GetSystemTime(&st);   
+	/*
+	* if condition is false the date will be the current time.
+	*/
+	if (arr > 2)
+	{
+		st.wDay = _tstoi(argv[2]); st.wMonth = _tstoi(argv[3]); st.wYear = _tstoi(argv[4]);
+	}
+
+	SystemTimeToFileTime(&st, &ft);
+	return SetFileTime(hFile, &ft,  &ft,  &ft);
+}
+
+
